@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  restartPolicy: OnFailure
+  containers:
+    - name: ksqldb-schemas
+      image: confluentinc/ksqldb-cli:0.17.0
+      imagePullPolicy: IfNotPresent
+      command: ["ksql"]
+      args:  ["http://deploy-cp-ksql-server:8088", "--file", "/schemas/schema.sql"]
+      volumeMounts:
+        - name: schemas
+          mountPath: /schemas
+  volumes:
+  - name: schemas
+    configMap:
+      name: schema
+      defaultMode: 0777
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: schema
+data:
+  schema.sql: |-
+    create table if not exists users
+      with (
+          kafka_topic='users',
+          format='avro'
+      );
